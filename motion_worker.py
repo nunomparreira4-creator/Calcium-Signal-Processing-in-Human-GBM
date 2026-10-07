@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["MPLBACKEND"] = "Agg"
 import json
 import numpy as np
 import sys
@@ -78,11 +79,14 @@ if chunks:
     print(f"Combining {len(chunks)} files into {final_output_path}...")
 
     # Open a BigTIFF writer and inject the small TIF chunks into it
-    with tf.TiffWriter(final_output_path, bigtiff=True) as visual_tif:
+    with tf.TiffWriter(final_output_path, bigtiff=True) as writer:
         for chunk in chunks:
             # Read each Suite2p chunk and append it to the final file
             data_chunk = tf.imread(chunk)
-            visual_tif.write(data_chunk, contiguous=True)
+            if data_chunk.ndim == 2:
+                data_chunk = data_chunk[None]
+            for frame in data_chunk:
+                writer.write(frame, contiguous=True)
 
     print("Done concatenating!")
 else:
